@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { api, type AuthResponse } from '@/lib/api';
+
+import { loginWithTelegram } from '../api/auth.api';
+import type { AuthSession } from '../types/auth.types';
 
 declare global {
   interface Window {
@@ -9,26 +11,28 @@ declare global {
   }
 }
 
-type TelegramLoginProps = {
+type TelegramLoginButtonProps = {
   botUsername: string;
-  onSuccess: (response: AuthResponse) => void;
+  onSuccess: (session: AuthSession) => void;
   onError?: (error: Error) => void;
 };
 
-export function TelegramLogin({
+export function TelegramLoginButton({
   botUsername,
   onSuccess,
   onError,
-}: TelegramLoginProps) {
+}: TelegramLoginButtonProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     window.onTelegramAuth = async (user) => {
       try {
-        const response = await api.loginWithTelegram(user);
-        onSuccess(response);
+        const session = await loginWithTelegram(user);
+        onSuccess(session);
       } catch (error) {
-        onError?.(error instanceof Error ? error : new Error('Login failed'));
+        onError?.(
+          error instanceof Error ? error : new Error('Telegram login failed'),
+        );
       }
     };
 
@@ -37,7 +41,7 @@ export function TelegramLogin({
     script.async = true;
     script.setAttribute('data-telegram-login', botUsername);
     script.setAttribute('data-size', 'large');
-    script.setAttribute('data-radius', '8');
+    script.setAttribute('data-radius', '12');
     script.setAttribute('data-onauth', 'onTelegramAuth(user)');
     script.setAttribute('data-request-access', 'write');
 

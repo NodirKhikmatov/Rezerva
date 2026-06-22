@@ -1,16 +1,11 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+/** @deprecated Import from `@/features/auth` or `@/shared/lib/api-client` instead. */
+export type {
+  AuthSession as AuthResponse,
+  AuthUser,
+} from '@/features/auth/types/auth.types';
+export { loginWithTelegram } from '@/features/auth/api/auth.api';
 
-export type AuthResponse = {
-  accessToken: string;
-  user: {
-    id: string;
-    telegramId: string;
-    firstName: string | null;
-    lastName: string | null;
-    username: string | null;
-    photoUrl: string | null;
-  };
-};
+import { apiRequest } from '@/shared/lib/api-client';
 
 export type Product = {
   id: string;
@@ -21,47 +16,24 @@ export type Product = {
   isAvailable: boolean;
 };
 
-async function request<T>(
-  path: string,
-  options: RequestInit & { token?: string } = {},
-): Promise<T> {
-  const { token, headers, ...rest } = options;
-
-  const response = await fetch(`${API_URL}${path}`, {
-    ...rest,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...headers,
-    },
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(error || `Request failed: ${response.status}`);
-  }
-
-  return response.json() as Promise<T>;
-}
-
 export const api = {
   loginWithTelegram: (payload: Record<string, unknown>) =>
-    request<AuthResponse>('/auth/telegram', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-    }),
+    import('@/features/auth/api/auth.api').then((m) =>
+      m.loginWithTelegram(payload),
+    ),
 
-  getProducts: () => request<Product[]>('/orders/products'),
+  getProducts: () => apiRequest<Product[]>('/v1/orders/products'),
 
-  getMyOrders: (token: string) => request<unknown[]>('/orders/me', { token }),
+  getMyOrders: (token: string) =>
+    apiRequest<unknown[]>('/v1/orders/me', { token }),
 
   createOrder: (
     token: string,
     body: { items: { productId: string; quantity: number }[]; notes?: string },
   ) =>
-    request<unknown>('/orders', {
+    apiRequest<unknown>('/v1/orders', {
       method: 'POST',
       token,
-      body: JSON.stringify(body),
+      body,
     }),
 };

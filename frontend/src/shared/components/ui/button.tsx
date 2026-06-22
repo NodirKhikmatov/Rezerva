@@ -49,6 +49,7 @@ type ButtonProps = ButtonPrimitive.Props &
     loading?: boolean;
     leftIcon?: LucideIcon;
     rightIcon?: LucideIcon;
+    asChild?: boolean;
   };
 
 function Button({
@@ -61,16 +62,26 @@ function Button({
   leftIcon: LeftIcon,
   rightIcon: RightIcon,
   children,
+  asChild = false,
   ...props
 }: ButtonProps) {
   const isDisabled = disabled || loading;
+  const classes = cn(buttonVariants({ variant, size, fullWidth, className }));
+
+  if (asChild && React.isValidElement(children)) {
+    const child = children as React.ReactElement<{ className?: string }>;
+
+    return React.cloneElement(child, {
+      className: cn(classes, child.props.className),
+    });
+  }
 
   return (
     <ButtonPrimitive
       data-slot="button"
       aria-busy={loading || undefined}
       disabled={isDisabled}
-      className={cn(buttonVariants({ variant, size, fullWidth, className }))}
+      className={classes}
       {...props}
     >
       {loading ? (
