@@ -26,7 +26,8 @@
   },
   "lint-staged": {
     "*.{json,md,yml,yaml,css}": "prettier --write",
-    "backend/**/*.ts": "eslint --fix --config backend/eslint.config.mjs",
+    "backend/src/**/*.ts": "eslint --fix --config backend/eslint.config.mjs",
+    "backend/{test,prisma}/**/*.ts": "prettier --write",
     "frontend/**/*.{ts,tsx}": "eslint --fix --config frontend/eslint.config.mjs",
     "packages/**/*.{ts,tsx,mjs}": "eslint --fix"
   }
