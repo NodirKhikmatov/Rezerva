@@ -5,6 +5,8 @@ import {
   NotificationChannel,
   NotificationType,
   PaymentMethod,
+  PaymentStatus,
+  PaymentType,
   Prisma,
   SlotHoldStatus,
 } from '@prisma/client';
@@ -241,6 +243,25 @@ export class BookingRepository {
           bookingId: booking.id,
         },
       });
+
+      if (status === BookingStatus.pending_payment) {
+        const paymentAmount =
+          depositAmount > 0 ? depositAmount : Number(hold.price);
+        const paymentType =
+          depositAmount > 0 && depositAmount < Number(hold.price)
+            ? PaymentType.deposit
+            : PaymentType.full;
+
+        await tx.payment.create({
+          data: {
+            bookingId: booking.id,
+            type: paymentType,
+            amount: paymentAmount,
+            currency: hold.currency,
+            status: PaymentStatus.pending,
+          },
+        });
+      }
 
       if (status === BookingStatus.confirmed) {
         await tx.notification.create({

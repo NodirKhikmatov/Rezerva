@@ -15,6 +15,8 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,json,md,yml,yaml,css}\"",
     "docker:up": "docker compose up -d postgres redis",
     "docker:down": "docker compose down",
+    "docker:backend": "docker compose --profile full up -d --build backend",
+    "docker:prod": "docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile full up -d --build",
     "prepare": "husky"
   },
   "devDependencies": {

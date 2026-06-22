@@ -131,15 +131,15 @@ Migrations live in `backend/prisma/migrations/`. The initial migration is `20260
 
 ## Documentation
 
-| Document                                                       | Description                               |
-| -------------------------------------------------------------- | ----------------------------------------- |
-| [docs/API.md](docs/API.md)                                     | REST API specification (`/v1`)            |
-| [docs/BACKEND_ARCHITECTURE.md](docs/BACKEND_ARCHITECTURE.md)   | NestJS modules, repositories, guards      |
-| [docs/FRONTEND_ARCHITECTURE.md](docs/FRONTEND_ARCHITECTURE.md) | App Router, features, state               |
-| [docs/BOT_ARCHITECTURE.md](docs/BOT_ARCHITECTURE.md)           | Telegraf bot, scenes, Redis sessions      |
-| [docs/COMPONENTS.md](docs/COMPONENTS.md)                       | UI component inventory                    |
-| [TODO.md](TODO.md)                                             | Implementation task breakdown (107 tasks) |
-| [.github/issues/issues.json](.github/issues/issues.json)       | Product roadmap and acceptance criteria   |
+| Document                                                       | Description                                       |
+| -------------------------------------------------------------- | ------------------------------------------------- |
+| [docs/API.md](docs/API.md)                                     | REST API specification (`/v1`)                    |
+| [docs/BACKEND_ARCHITECTURE.md](docs/BACKEND_ARCHITECTURE.md)   | NestJS modules, repositories, guards              |
+| [docs/FRONTEND_ARCHITECTURE.md](docs/FRONTEND_ARCHITECTURE.md) | App Router, features, state                       |
+| [docs/BOT_ARCHITECTURE.md](docs/BOT_ARCHITECTURE.md)           | Telegraf bot, scenes, Redis sessions              |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)                       | Production deploy: Docker, Vercel, Railway, CI/CD |
+| [TODO.md](TODO.md)                                             | Implementation task breakdown (107 tasks)         |
+| [.github/issues/issues.json](.github/issues/issues.json)       | Product roadmap and acceptance criteria           |
 
 ## Scripts
 
@@ -180,21 +180,37 @@ Start only infrastructure (recommended for local development):
 
 ```bash
 docker compose up -d postgres redis
+# or
+pnpm docker:up
 ```
 
-Build and run the backend container (includes migrate on deploy in production pipelines):
+Build and run the backend container (includes migrate on start):
 
 ```bash
-docker compose up -d --build backend
+pnpm docker:backend
+# or
+docker compose --profile full up -d --build backend
 ```
 
-## CI
+Production-like local stack:
 
-GitHub Actions (`.github/workflows/ci.yml`) runs on push/PR to `main`:
+```bash
+pnpm docker:prod
+```
 
-- Backend: lint, build, Prisma client generation (Postgres + Redis services)
-- Frontend: lint, build
-- Docker: backend image build
+See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** for full production deployment (Vercel, Railway, secrets, monitoring, backups).
+
+## CI / CD
+
+GitHub Actions:
+
+| Workflow              | Trigger                       | Purpose                               |
+| --------------------- | ----------------------------- | ------------------------------------- |
+| `ci.yml`              | Push/PR to `main`             | Lint, test, build, migrations, Docker |
+| `deploy.yml`          | After successful CI on `main` | Deploy to Vercel + Railway            |
+| `backup-database.yml` | Daily 03:00 UTC + manual      | Postgres backup artifact              |
+
+Configure secrets: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `RAILWAY_TOKEN`, `RAILWAY_PUBLIC_DOMAIN`, `DATABASE_URL` (backups).
 
 ## License
 

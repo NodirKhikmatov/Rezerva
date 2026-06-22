@@ -1,15 +1,30 @@
-import { Controller, Get } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  ServiceUnavailableException,
+} from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from '../shared/decorators/public.decorator';
-import { PrismaService } from '../prisma/prisma.service';
+import { HealthService } from './health.service';
 
+@ApiTags('health')
 @Controller('health')
 export class HealthController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly healthService: HealthService) {}
 
   @Public()
   @Get()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Health check (Postgres + Redis)' })
   async check() {
-    await this.prisma.$queryRaw`SELECT 1`;
-    return { status: 'ok', timestamp: new Date().toISOString() };
+    const result = await this.healthService.check();
+
+    if (result.status === 'degraded') {
+      throw new ServiceUnavailableException(result);
+    }
+
+    return result;
   }
 }

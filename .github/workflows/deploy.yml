@@ -1,30 +1,74 @@
 name: Deploy
 
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
 
 jobs:
   deploy-frontend:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.event.workflow_run.conclusion == 'success'
+
     steps:
       - uses: actions/checkout@v4
-      - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: frontend
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Pull Vercel environment
+        run: pnpm dlx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Build frontend
+        run: pnpm dlx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Deploy frontend to Vercel
+        run: pnpm dlx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
   deploy-backend:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.event.workflow_run.conclusion == 'success'
+
     steps:
       - uses: actions/checkout@v4
-      - name: Deploy to Railway
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Deploy backend to Railway
         uses: bervProject/railway-deploy@v0.3.0
         with:
           railway_token: ${{ secrets.RAILWAY_TOKEN }}
           service: backend
+
+      - name: Verify API health
+        if: env.RAILWAY_PUBLIC_DOMAIN != ''
+        env:
+          RAILWAY_PUBLIC_DOMAIN: ${{ secrets.RAILWAY_PUBLIC_DOMAIN }}
+        run: |
+          chmod +x scripts/wait-for-health.sh
+          ./scripts/wait-for-health.sh "https://${RAILWAY_PUBLIC_DOMAIN}/health"

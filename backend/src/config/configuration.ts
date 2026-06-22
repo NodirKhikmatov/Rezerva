@@ -23,4 +23,21 @@ export default () => ({
   },
   frontendUrl: process.env.FRONTEND_URL ?? 'http://localhost:3000',
   apiBaseUrl: process.env.API_BASE_URL ?? 'http://localhost:3001',
+  payments: {
+    payme: {
+      merchantId: process.env.PAYME_MERCHANT_ID ?? '',
+      apiKey: process.env.PAYME_API_KEY ?? '',
+    },
+    click: {
+      merchantId: process.env.CLICK_MERCHANT_ID ?? '',
+      serviceId: process.env.CLICK_SERVICE_ID ?? '',
+      secretKey: process.env.CLICK_SECRET_KEY ?? '',
+    },
+  },
+  logging: {
+    betterStackSourceToken: process.env.BETTER_STACK_SOURCE_TOKEN ?? '',
+  },
+  sentry: {
+    dsn: process.env.SENTRY_DSN ?? '',
+  },
 });

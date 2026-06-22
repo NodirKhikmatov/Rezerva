@@ -4,9 +4,12 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { appLogger } from './shared/logging/app-logger';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: process.env.NODE_ENV === 'production' ? false : undefined,
+  });
   const configService = app.get(ConfigService);
 
   app.setGlobalPrefix('v1', {
@@ -37,6 +40,11 @@ async function bootstrap() {
 
   const port = configService.get<number>('port') ?? 3001;
   await app.listen(port);
+
+  appLogger.info('API started', {
+    port,
+    nodeEnv: configService.get<string>('nodeEnv'),
+  });
 }
 
 void bootstrap();

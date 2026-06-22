@@ -5,7 +5,6 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PaymentMethod } from '@prisma/client';
 import {
   buildPaginationMeta,
   getPaginationParams,
@@ -116,12 +115,6 @@ export class BookingService {
   }
 
   async confirmBooking(userId: string, dto: ConfirmBookingDto) {
-    if (dto.paymentMethod === PaymentMethod.online) {
-      throw new UnprocessableEntityException(
-        'Online payment is not implemented',
-      );
-    }
-
     const apiBaseUrl =
       this.configService.get<string>('apiBaseUrl') ?? 'https://api.rezerva.uz';
 
