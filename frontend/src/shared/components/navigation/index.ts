@@ -6,3 +6,4 @@ export {
 } from './footer';
 export { Navbar, type NavbarLink, type NavbarProps } from './navbar';
 export { Sidebar, type SidebarNavItem, type SidebarProps } from './sidebar';
+export { Breadcrumbs, type BreadcrumbItem } from './breadcrumbs';

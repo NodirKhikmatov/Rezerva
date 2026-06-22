@@ -1,3 +1,5 @@
+import type { PlatformRole } from '@rezerva/shared-constants';
+
 export type AuthUser = {
   id: string;
   telegramId: string;
@@ -5,6 +7,7 @@ export type AuthUser = {
   lastName: string | null;
   username: string | null;
   photoUrl: string | null;
+  role?: PlatformRole;
 };
 
 export type AuthSession = {

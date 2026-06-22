@@ -6,6 +6,36 @@ export function formatPrice(amount: number, currency = 'UZS'): string {
   }).format(amount);
 }
 
+export function formatCompactNumber(value: number): string {
+  return new Intl.NumberFormat('uz-UZ', {
+    notation: 'compact',
+    maximumFractionDigits: 1,
+  }).format(value);
+}
+
+export function formatRelativeTime(iso: string): string {
+  const date = new Date(iso);
+  const diffMs = Date.now() - date.getTime();
+  const diffMinutes = Math.round(diffMs / 60000);
+
+  if (diffMinutes < 1) {
+    return 'Hozirgina';
+  }
+
+  if (diffMinutes < 60) {
+    return `${diffMinutes} daqiqa oldin`;
+  }
+
+  const diffHours = Math.round(diffMinutes / 60);
+
+  if (diffHours < 24) {
+    return `${diffHours} soat oldin`;
+  }
+
+  const diffDays = Math.round(diffHours / 24);
+  return `${diffDays} kun oldin`;
+}
+
 export function formatSlotTime(iso: string): string {
   return new Intl.DateTimeFormat('en-GB', {
     hour: '2-digit',
