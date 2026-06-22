@@ -1,0 +1,39 @@
+---
+description: NestJS patterns — Repository, Service layer, DTOs, Guards, validation
+globs: backend/**/*
+alwaysApply: false
+---
+
+# Backend
+
+Use NestJS.
+
+Use Repository Pattern.
+
+Use Service Layer.
+
+Use DTO.
+
+Use Validation Pipe.
+
+Use Guards.
+
+Use Interceptors.
+
+Use Exception Filters.
+
+Never access database directly inside controller.
+
+Business logic belongs inside services.
+
+Structure features under `src/features/<feature>/` with module, controller, service, repository, dto, and types.
+
+Controllers handle HTTP only — parse input, call service, return response.
+
+Repositories encapsulate all Prisma/database access.
+
+Use class-validator and class-transformer for DTO validation.
+
+Use `@nestjs/config` for environment configuration — never hardcode secrets.
+
+Return consistent error shapes via exception filters.

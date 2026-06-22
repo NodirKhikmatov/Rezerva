@@ -1,0 +1,26 @@
+---
+description: Security — validation, rate limiting, JWT, encryption, HTTPS, env isolation
+alwaysApply: true
+---
+
+# Security
+
+Validate every request.
+
+Never trust user input.
+
+Sanitize data.
+
+Escape HTML.
+
+Rate Limit APIs.
+
+Encrypt sensitive data.
+
+JWT Authentication.
+
+Never expose secrets.
+
+Store ENV separately.
+
+Always use HTTPS.

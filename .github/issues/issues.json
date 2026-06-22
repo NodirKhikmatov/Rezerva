@@ -1,0 +1,1447 @@
+{
+  "issues": [
+    {
+      "title": "[M0] Epic: Platform Foundation",
+      "milestone": "milestone/M0",
+      "type": "type/epic",
+      "area": "area/devops",
+      "priority": "priority/P0",
+      "storyPoints": 13,
+      "extraLabels": [],
+      "description": "Establish production-ready platform skeleton: auth, CI/CD, design tokens, core DB schema, and deployable consumer shell. This milestone enables all subsequent work.",
+      "acceptanceCriteria": [
+        "Users can log in via phone OTP or Telegram on staging and production",
+        "CI runs lint, typecheck, test, and build on every PR",
+        "Health endpoint reports PostgreSQL and Redis status",
+        "Design system tokens (primary blue, semantic colors, dark mode) are applied",
+        "No secrets committed to the repository"
+      ],
+      "checklist": [
+        "Review all M0 child issues are closed",
+        "Staging deploy verified",
+        "Production deploy verified with smoke tests",
+        "Release tagged v0.1.0"
+      ]
+    },
+    {
+      "title": "[M0] Configure npm workspaces and shared TypeScript config",
+      "milestone": "milestone/M0",
+      "type": "type/chore",
+      "area": "area/devops",
+      "priority": "priority/P0",
+      "storyPoints": 3,
+      "extraLabels": [],
+      "description": "Set up monorepo workspaces for frontend, backend, and shared packages. Add base tsconfig, eslint config, and root scripts for dev/build/lint.",
+      "acceptanceCriteria": [
+        "Root package.json defines workspaces for frontend and backend",
+        "packages/tsconfig and packages/eslint-config exist and are consumed by apps",
+        "npm run dev starts frontend and backend concurrently",
+        "npm run lint and npm run build succeed from root"
+      ],
+      "checklist": [
+        "Add packages/tsconfig/base.json, nestjs.json, nextjs.json",
+        "Add packages/eslint-config",
+        "Update frontend and backend tsconfig to extend shared base",
+        "Document setup in README"
+      ]
+    },
+    {
+      "title": "[M0] Docker Compose dev environment (PostgreSQL + Redis + API)",
+      "milestone": "milestone/M0",
+      "type": "type/infra",
+      "area": "area/devops",
+      "priority": "priority/P0",
+      "storyPoints": 3,
+      "extraLabels": [],
+      "description": "Provide reproducible local development with PostgreSQL 16, Redis 7, and backend API container. Include healthchecks and volume persistence.",
+      "acceptanceCriteria": [
+        "docker compose up starts postgres, redis, and backend without errors",
+        "Backend connects to postgres and redis via compose network",
+        "Health endpoint returns 200 when dependencies are healthy",
+        ".env.example documents all required variables"
+      ],
+      "checklist": [
+        "Verify docker-compose.yml services and healthchecks",
+        "Add docker-compose.dev.yml overrides if needed",
+        "Add .env.docker.example",
+        "Test fresh clone setup end-to-end"
+      ]
+    },
+    {
+      "title": "[M0] GitHub Actions CI pipeline",
+      "milestone": "milestone/M0",
+      "type": "type/infra",
+      "area": "area/devops",
+      "priority": "priority/P0",
+      "storyPoints": 5,
+      "extraLabels": [],
+      "description": "Implement CI workflow on pull requests: install deps, prisma generate, lint, typecheck, unit tests, and build both apps.",
+      "acceptanceCriteria": [
+        "CI runs on pull_request to main and develop",
+        "CI fails on lint or type errors",
+        "CI runs backend unit tests with test database or mocks",
+        "CI builds frontend and backend successfully"
+      ],
+      "checklist": [
+        "Create or update .github/workflows/ci.yml",
+        "Add PostgreSQL and Redis service containers for tests",
+        "Cache npm dependencies",
+        "Add CI status badge to README"
+      ]
+    },
+    {
+      "title": "[M0] Staging and production deploy workflows",
+      "milestone": "milestone/M0",
+      "type": "type/infra",
+      "area": "area/devops",
+      "priority": "priority/P1",
+      "storyPoints": 5,
+      "extraLabels": [],
+      "description": "Configure automated deploy to Vercel (frontend) and Railway (backend) on merge to main. Include prisma migrate deploy in backend release.",
+      "acceptanceCriteria": [
+        "Push to main deploys frontend to Vercel",
+        "Push to main deploys backend to Railway",
+        "Backend runs prisma migrate deploy before start",
+        "GitHub secrets documented for required tokens"
+      ],
+      "checklist": [
+        "Verify .github/workflows/deploy.yml",
+        "Configure Railway and Vercel project secrets",
+        "Test rollback procedure",
+        "Document deploy runbook in docs/runbooks/"
+      ]
+    },
+    {
+      "title": "[M0] Core database schema — users, auth, geography",
+      "milestone": "milestone/M0",
+      "type": "type/feature",
+      "area": "area/database",
+      "priority": "priority/P0",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "Replace legacy ordering schema with booking platform core tables: users, user_identities, user_sessions, otp_verifications, countries, regions, districts, addresses. Apply UUID PKs, soft delete, timestamps.",
+      "acceptanceCriteria": [
+        "Prisma schema includes all core identity and geo tables",
+        "Migration runs cleanly on empty and existing databases",
+        "Legacy orders tables archived or removed without breaking auth",
+        "Seed script populates Tashkent regions and districts"
+      ],
+      "checklist": [
+        "Write prisma/schema.prisma core models",
+        "Generate and review migration SQL",
+        "Create prisma/seed/geo.seed.ts",
+        "Run prisma migrate dev and seed locally",
+        "Document migration path from ordering schema"
+      ]
+    },
+    {
+      "title": "[M0] Phone OTP authentication API",
+      "milestone": "milestone/M0",
+      "type": "type/feature",
+      "area": "area/backend",
+      "priority": "priority/P0",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "Implement POST /v1/auth/otp/send and /v1/auth/otp/verify with rate limiting, hashed OTP storage, SMS provider integration (sandbox OK), and JWT pair issuance.",
+      "acceptanceCriteria": [
+        "OTP expires after 5 minutes",
+        "Rate limit: max 3 send requests per phone per hour",
+        "Verify returns access + refresh tokens",
+        "Invalid OTP returns 401 with clear error message",
+        "Phone normalized to E.164 +998 format"
+      ],
+      "checklist": [
+        "Create features/auth module with repository pattern",
+        "Implement OtpVerification model access",
+        "Integrate SMS provider sandbox",
+        "Add Redis rate limiting",
+        "Write unit tests for OTP hash and expiry",
+        "Add e2e test for OTP flow"
+      ]
+    },
+    {
+      "title": "[M0] Telegram Login and JWT session management",
+      "milestone": "milestone/M0",
+      "type": "type/feature",
+      "area": "area/backend",
+      "priority": "priority/P0",
+      "storyPoints": 5,
+      "extraLabels": [],
+      "description": "Extend auth with Telegram Login hash verification, user_identities upsert, refresh token rotation in user_sessions, and POST /v1/auth/refresh endpoint.",
+      "acceptanceCriteria": [
+        "Telegram hash verified per Telegram docs with bot token",
+        "Auth data older than 24h rejected",
+        "Refresh token rotation invalidates previous token",
+        "JWT includes sub, role, locale, jti claims",
+        "Existing telegram login frontend continues to work"
+      ],
+      "checklist": [
+        "Migrate auth to features/auth structure",
+        "Implement user_identities upsert on Telegram login",
+        "Add refresh endpoint and session revocation",
+        "Add JwtAuthGuard and @Public decorator",
+        "Update frontend api client for cookie/token handling"
+      ]
+    },
+    {
+      "title": "[M0] Design system tokens and shadcn base components",
+      "milestone": "milestone/M0",
+      "type": "type/feature",
+      "area": "area/design",
+      "priority": "priority/P0",
+      "storyPoints": 5,
+      "extraLabels": [],
+      "description": "Implement design system in globals.css: primary blue #2563EB, success/warning/destructive tokens, dark mode, 8px spacing. Install shadcn Button, Input, Card, Skeleton, Toast, Dialog, Sheet, Badge.",
+      "acceptanceCriteria": [
+        "Primary color is brand blue in light and dark mode",
+        "Dark mode toggles via .dark class on html",
+        "All base shadcn components render without hardcoded colors",
+        "Typography uses Geist Sans with defined scale",
+        "Focus rings visible on keyboard navigation"
+      ],
+      "checklist": [
+        "Update globals.css semantic tokens",
+        "Add success, warning, category accent variables",
+        "Install required shadcn components",
+        "Create ThemeProvider for dark mode",
+        "Verify WCAG contrast on primary button"
+      ]
+    },
+    {
+      "title": "[M0] Consumer app shell, layout, and login pages",
+      "milestone": "milestone/M0",
+      "type": "type/feature",
+      "area": "area/frontend",
+      "priority": "priority/P0",
+      "storyPoints": 5,
+      "extraLabels": [],
+      "description": "Build AppShell with Header, Footer, mobile layout, login page (C-50), OTP verify page (C-51), and placeholder homepage (C-01). Organize features/auth under src/features/auth/.",
+      "acceptanceCriteria": [
+        "Login page supports phone OTP and Telegram widget",
+        "Authenticated users redirect from login to homepage",
+        "Homepage renders category placeholder grid",
+        "Mobile layout responsive at 375px width",
+        "httpOnly cookie stores session when configured"
+      ],
+      "checklist": [
+        "Create features/auth components and hooks",
+        "Implement login and verify routes",
+        "Add Header, Footer, Container layout components",
+        "Wire TelegramLogin to API",
+        "Add middleware for protected routes skeleton"
+      ]
+    },
+    {
+      "title": "[M0] Health checks, Sentry, and environment validation",
+      "milestone": "milestone/M0",
+      "type": "type/chore",
+      "area": "area/backend",
+      "priority": "priority/P1",
+      "storyPoints": 3,
+      "extraLabels": [],
+      "description": "Add GET /health with DB and Redis ping, Sentry instrumentation on API and web, and fail-fast env validation on boot (JWT_SECRET, DATABASE_URL, etc.).",
+      "acceptanceCriteria": [
+        "/health returns 200 with db:ok and redis:ok",
+        "/health returns 503 if dependency down",
+        "Sentry captures unhandled exceptions in staging",
+        "App refuses to start if required env vars missing in production"
+      ],
+      "checklist": [
+        "Extend health controller with dependency checks",
+        "Verify instrument.ts on backend and frontend",
+        "Add configuration validation schema",
+        "Test health endpoint in Docker compose"
+      ]
+    },
+    {
+      "title": "[M0] Shared packages — constants and validation",
+      "milestone": "milestone/M0",
+      "type": "type/chore",
+      "area": "area/devops",
+      "priority": "priority/P1",
+      "storyPoints": 3,
+      "extraLabels": [],
+      "description": "Create packages/shared-constants (enums: BusinessCategory, BookingStatus, Locale) and packages/shared-validation (Zod auth schemas) consumed by frontend and backend.",
+      "acceptanceCriteria": [
+        "packages/shared-constants exports all core enums",
+        "packages/shared-validation exports phone and OTP Zod schemas",
+        "Frontend login form uses shared-validation",
+        "No duplicate enum definitions across apps"
+      ],
+      "checklist": [
+        "Scaffold packages/shared-constants",
+        "Scaffold packages/shared-validation",
+        "Wire workspace dependencies in frontend package.json",
+        "Add build step if needed for packages"
+      ]
+    },
+    {
+      "title": "[M1] Epic: Business Supply Onboarding",
+      "milestone": "milestone/M1",
+      "type": "type/epic",
+      "area": "area/backend",
+      "priority": "priority/P0",
+      "storyPoints": 21,
+      "extraLabels": [],
+      "description": "Enable businesses to register, complete category onboarding, and manage catalog (resources, services, hours, policies). Deploy business dashboard without consumer booking.",
+      "acceptanceCriteria": [
+        "Football venue owner completes onboarding end-to-end",
+        "Business status workflow: draft → pending_verification → active",
+        "Resources and services CRUD works via API",
+        "Media upload to Supabase succeeds",
+        "At least 10 businesses onboarded via concierge"
+      ],
+      "checklist": [
+        "Close all M1 child issues",
+        "Manual verification process documented",
+        "Deploy business routes to staging",
+        "Release tagged v0.2.0"
+      ]
+    },
+    {
+      "title": "[M1] Business domain database schema",
+      "milestone": "milestone/M1",
+      "type": "type/feature",
+      "area": "area/database",
+      "priority": "priority/P0",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "Add Prisma models: businesses, business_locations, business_members, business_working_hours, business_blocked_dates, business_policies, business_media, business_verifications, resources, services, service_resources, resource_availability_rules, resource_blocked_slots, football_venue_profiles, football_pitches.",
+      "acceptanceCriteria": [
+        "All business catalog tables migrated",
+        "Foreign keys and indexes on business_id, location_id, resource_id",
+        "Soft delete on businesses, resources, services",
+        "Unique slug on businesses"
+      ],
+      "checklist": [
+        "Write schema additions",
+        "Generate migration",
+        "Add seed for demo football business",
+        "Review with database architecture doc"
+      ]
+    },
+    {
+      "title": "[M1] Business registration and profile API",
+      "milestone": "milestone/M1",
+      "type": "type/feature",
+      "area": "area/backend",
+      "priority": "priority/P0",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "Implement features/business module: register business, generate slug, CRUD profile, locations, BusinessMemberGuard for owner/manager roles.",
+      "acceptanceCriteria": [
+        "POST /v1/businesses creates business linked to owner user",
+        "Slug unique and URL-safe",
+        "Only owner/manager can update business",
+        "List businesses for current member returns tenant-scoped data"
+      ],
+      "checklist": [
+        "Create business.module, controller, service, repository",
+        "Add DTOs with class-validator",
+        "Implement BusinessMemberGuard",
+        "Write unit tests for slug generation"
+      ]
+    },
+    {
+      "title": "[M1] Onboarding wizard API with step validation",
+      "milestone": "milestone/M1",
+      "type": "type/feature",
+      "area": "area/backend",
+      "priority": "priority/P0",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "Multi-step onboarding API for football category: category → profile → location → resources → services → hours → policies → verification submit.",
+      "acceptanceCriteria": [
+        "Each step validates required fields before advancing",
+        "Incomplete onboarding returns progress state",
+        "Submit verification sets status pending_verification",
+        "Category-specific validation for football fields"
+      ],
+      "checklist": [
+        "Define onboarding step enum and state machine",
+        "Implement step endpoints or PATCH with step id",
+        "Add football_venue_profiles on completion",
+        "Document onboarding API in OpenAPI or README"
+      ]
+    },
+    {
+      "title": "[M1] Resources, services, and availability rules API",
+      "milestone": "milestone/M1",
+      "type": "type/feature",
+      "area": "area/backend",
+      "priority": "priority/P0",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "CRUD for bookable resources (pitches), services (2h football), service-resource mapping, working hours, blocked dates, and resource blocked slots.",
+      "acceptanceCriteria": [
+        "Create pitch resource with football_pitches extension",
+        "Service duration and pricing model stored correctly",
+        "Working hours enforce one row per day per location",
+        "Blocked dates prevent booking on those days (validated in M2)"
+      ],
+      "checklist": [
+        "Implement resource and service repositories",
+        "Add service_resources linking",
+        "Implement hours and blocked dates endpoints",
+        "Add integration tests for catalog CRUD"
+      ]
+    },
+    {
+      "title": "[M1] Supabase media upload for business gallery",
+      "milestone": "milestone/M1",
+      "type": "type/feature",
+      "area": "area/backend",
+      "priority": "priority/P1",
+      "storyPoints": 5,
+      "extraLabels": [],
+      "description": "Signed upload URLs for business_media, public bucket for gallery images, confirm endpoint to save URL in database.",
+      "acceptanceCriteria": [
+        "Client uploads directly to Supabase without passing through API",
+        "Only business members can request signed URL for their business",
+        "Media records support sort_order and is_cover",
+        "Max file size and mime type validated"
+      ],
+      "checklist": [
+        "Extend storage.service for signed URLs",
+        "Add POST /v1/businesses/:id/media/upload-url",
+        "Add POST /v1/businesses/:id/media/confirm",
+        "Test upload from business UI"
+      ]
+    },
+    {
+      "title": "[M1] Business dashboard — onboarding wizard UI (football)",
+      "milestone": "milestone/M1",
+      "type": "type/feature",
+      "area": "area/frontend",
+      "priority": "priority/P0",
+      "storyPoints": 13,
+      "extraLabels": [],
+      "description": "Build business app routes B-04–B-12: onboarding wizard with stepper, forms for profile, location, pitch, service, hours, policies, document upload. Include D-12 leave guard.",
+      "acceptanceCriteria": [
+        "User completes all wizard steps without dead ends",
+        "Form validation uses Zod + React Hook Form",
+        "Progress persisted on refresh",
+        "Mobile responsive wizard",
+        "Verification pending state shown after submit"
+      ],
+      "checklist": [
+        "Create apps/business or (business) route group",
+        "Implement OnboardingStep and Progress components",
+        "Wire each step to onboarding API",
+        "Add leave confirmation dialog",
+        "Test on mobile viewport"
+      ]
+    },
+    {
+      "title": "[M1] Business catalog management UI — services and resources",
+      "milestone": "milestone/M1",
+      "type": "type/feature",
+      "area": "area/frontend",
+      "priority": "priority/P1",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "Screens B-30–B-35: list and create/edit services and resources with drawers, empty states E-07 E-08, delete confirmation dialogs.",
+      "acceptanceCriteria": [
+        "Business owner can add/edit/delete services",
+        "Business owner can add/edit/delete pitch resources",
+        "Empty states display when no catalog items",
+        "Delete shows D-04 D-05 confirmation"
+      ],
+      "checklist": [
+        "Implement services list and form drawer",
+        "Implement resources list and form drawer",
+        "Add football-specific fields on resource form",
+        "Connect to catalog API"
+      ]
+    },
+    {
+      "title": "[M2] Epic: Booking Engine — Football",
+      "milestone": "milestone/M2",
+      "type": "type/epic",
+      "area": "area/backend",
+      "priority": "priority/P0",
+      "storyPoints": 34,
+      "extraLabels": [],
+      "description": "First end-to-end booking loop for football fields with pay-at-venue. Includes availability engine, slot holds, booking confirmation, consumer UI, and double-booking prevention.",
+      "acceptanceCriteria": [
+        "50 real bookings completed in production",
+        "Zero double-booking in concurrency load test",
+        "Hold expires after 10 minutes releasing slot",
+        "Business can view and check-in bookings via API"
+      ],
+      "checklist": [
+        "Close all M2 child issues",
+        "Load test report attached",
+        "Release tagged v0.3.0"
+      ]
+    },
+    {
+      "title": "[M2] Booking database schema and migrations",
+      "milestone": "milestone/M2",
+      "type": "type/feature",
+      "area": "area/database",
+      "priority": "priority/P0",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "Add slot_holds, bookings, booking_line_items, booking_resource_allocations, booking_status_history, booking_participants with exclusion constraint strategy for overlapping allocations.",
+      "acceptanceCriteria": [
+        "All booking tables migrated with indexes on resource_id + time range",
+        "reference_code unique on bookings",
+        "policy_snapshot JSON required on booking create",
+        "Migration documented for exclusion constraint"
+      ],
+      "checklist": [
+        "Add booking models to schema.prisma",
+        "Generate migration with raw SQL for exclusion if needed",
+        "Add booking seed for dev testing",
+        "Peer review concurrency strategy"
+      ]
+    },
+    {
+      "title": "[M2] Availability engine v1",
+      "milestone": "milestone/M2",
+      "type": "type/feature",
+      "area": "area/backend",
+      "priority": "priority/P0",
+      "storyPoints": 13,
+      "extraLabels": [],
+      "description": "Compute available slots from working hours minus allocations, active holds, blocked slots, and blocked dates. Support football 1h/2h slot granularity and Redis cache with 5-min TTL.",
+      "acceptanceCriteria": [
+        "GET /v1/businesses/:id/availability returns slots for date range",
+        "p95 response under 500ms with cache warm",
+        "Cache invalidates on booking/hold/block change",
+        "Empty array returned with E-15 compatible message when no slots"
+      ],
+      "checklist": [
+        "Implement availability.service with pure functions",
+        "Add Redis cache-aside layer",
+        "Unit test edge cases: holidays, partial blocks",
+        "Integration test against seeded pitch"
+      ]
+    },
+    {
+      "title": "[M2] Slot holds and double-booking prevention",
+      "milestone": "milestone/M2",
+      "type": "type/feature",
+      "area": "area/backend",
+      "priority": "priority/P0",
+      "storyPoints": 13,
+      "extraLabels": [],
+      "description": "Implement slot hold creation with Redis lock, 10-min TTL, serializable transaction on confirm, exclusion constraint on booking_resource_allocations, hold expiry job.",
+      "acceptanceCriteria": [
+        "Concurrent hold requests: only one succeeds for last slot",
+        "Hold converts to booking on confirm",
+        "Expired holds release resource automatically",
+        "ER-08 returned when slot taken"
+      ],
+      "checklist": [
+        "Implement hold service with Redis SET NX",
+        "Add booking confirm in serializable transaction",
+        "Add hold expiry processor in worker or cron",
+        "Load test 100 concurrent requests"
+      ]
+    },
+    {
+      "title": "[M2] Booking lifecycle API — create, confirm, cancel, check-in",
+      "milestone": "milestone/M2",
+      "type": "type/feature",
+      "area": "area/backend",
+      "priority": "priority/P0",
+      "storyPoints": 13,
+      "extraLabels": [],
+      "description": "features/booking API: create booking from hold (pay at venue), cancel with policy, business check-in/complete/no-show, status history append, reference code generation.",
+      "acceptanceCriteria": [
+        "Booking statuses transition correctly per state machine",
+        "Cancel respects cancellation_hours_before from policy_snapshot",
+        "Business endpoints scoped by BusinessMemberGuard",
+        "booking_status_history append-only"
+      ],
+      "checklist": [
+        "Implement booking.controller, service, repository",
+        "Add policy evaluator for cancel",
+        "Implement check-in and no-show endpoints",
+        "Write e2e booking flow test"
+      ]
+    },
+    {
+      "title": "[M2] Search and public business profile API",
+      "milestone": "milestone/M2",
+      "type": "type/feature",
+      "area": "area/backend",
+      "priority": "priority/P0",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "features/search: list football businesses in Tashkent, filter by district, public GET business by slug with services/resources summary for profile page.",
+      "acceptanceCriteria": [
+        "Only active businesses returned in search",
+        "Slug route returns 404 for inactive or missing",
+        "District filter works with seeded data",
+        "Response includes average_rating if present"
+      ],
+      "checklist": [
+        "Create search.module with repository",
+        "Implement list and getBySlug endpoints",
+        "Add pagination on search results",
+        "Add basic full-text on name field"
+      ]
+    },
+    {
+      "title": "[M2] Consumer football booking flow UI",
+      "milestone": "milestone/M2",
+      "type": "type/feature",
+      "area": "area/frontend",
+      "priority": "priority/P0",
+      "storyPoints": 21,
+      "extraLabels": [],
+      "description": "Screens C-02, C-20, C-30–C-38, C-42: category landing, business profile, full booking flow with SlotPicker, HoldBanner, CountdownTimer, summary, success page. Pay at venue only.",
+      "acceptanceCriteria": [
+        "User books pitch in under 60 seconds on mobile",
+        "Hold countdown visible and redirects on expiry ER-09",
+        "Stepper shows 4 steps",
+        "Success page shows reference code and QR",
+        "All L-04 L-07 and ER-08 ER-09 states implemented"
+      ],
+      "checklist": [
+        "Create features/booking and features/search",
+        "Implement AvailabilityCalendar and SlotPicker",
+        "Wire hold + confirm API",
+        "Add StickyFooter CTA on mobile",
+        "Test complete flow on staging"
+      ]
+    },
+    {
+      "title": "[M2] My bookings list, detail, and cancel UI",
+      "milestone": "milestone/M2",
+      "type": "type/feature",
+      "area": "area/frontend",
+      "priority": "priority/P0",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "Screens C-52, C-53: upcoming/past tabs, BookingCard, detail with Timeline, D-03 cancel dialog, empty state E-02.",
+      "acceptanceCriteria": [
+        "Authenticated users see only their bookings",
+        "Cancel updates list without full page reload",
+        "Booking detail shows policy from snapshot",
+        "QR code displayed for confirmed bookings"
+      ],
+      "checklist": [
+        "Implement bookings list and detail routes",
+        "Add cancel dialog with policy summary",
+        "Add BookingCard and StatusBadge components",
+        "Add protected route middleware"
+      ]
+    },
+    {
+      "title": "[M3] Epic: Payments — Payme & Click",
+      "milestone": "milestone/M3",
+      "type": "type/epic",
+      "area": "area/payment",
+      "priority": "priority/P0",
+      "storyPoints": 21,
+      "extraLabels": [],
+      "description": "Integrate Payme and Click for deposits and full payments. Webhook verification, idempotent ledger, refunds, checkout UI, and payment worker.",
+      "acceptanceCriteria": [
+        "95%+ payment success rate on 20+ production transactions",
+        "No duplicate charges on webhook retry",
+        "Refund executes per cancellation policy",
+        "Commission recorded on each transaction"
+      ],
+      "checklist": [
+        "Close all M3 child issues",
+        "Payment runbook documented",
+        "Release tagged v0.4.0"
+      ]
+    },
+    {
+      "title": "[M3] Payment database schema and ledger",
+      "milestone": "milestone/M3",
+      "type": "type/feature",
+      "area": "area/database",
+      "priority": "priority/P0",
+      "storyPoints": 5,
+      "extraLabels": [],
+      "description": "Add payments, payment_transactions, refunds tables. Append-only ledger with idempotency_key unique constraint.",
+      "acceptanceCriteria": [
+        "One payment row per booking",
+        "payment_transactions never updated only inserted",
+        "idempotency_key prevents duplicate charges"
+      ],
+      "checklist": [
+        "Add payment models to schema",
+        "Generate migration",
+        "Document ledger pattern in code comments"
+      ]
+    },
+    {
+      "title": "[M3] Payme payment integration and webhook",
+      "milestone": "milestone/M3",
+      "type": "type/feature",
+      "area": "area/payment",
+      "priority": "priority/P0",
+      "storyPoints": 13,
+      "extraLabels": [],
+      "description": "Payme invoice creation, redirect URL, webhook HMAC verification, amount matching, auto-confirm booking on success.",
+      "acceptanceCriteria": [
+        "Sandbox and production credentials via env",
+        "Webhook rejects invalid signature",
+        "Duplicate webhook returns 200 without double charge",
+        "Booking moves to confirmed on successful payment"
+      ],
+      "checklist": [
+        "Implement Payme adapter in features/payment",
+        "Add webhooks/payme.webhook.controller",
+        "Integration test with sandbox",
+        "Add payment.processor retry queue"
+      ]
+    },
+    {
+      "title": "[M3] Click payment integration and webhook",
+      "milestone": "milestone/M3",
+      "type": "type/feature",
+      "area": "area/payment",
+      "priority": "priority/P1",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "Click as second payment provider with same idempotency and booking confirm flow as Payme.",
+      "acceptanceCriteria": [
+        "User can select Click at checkout",
+        "Click webhook verified and processed",
+        "Fallback if Payme unavailable"
+      ],
+      "checklist": [
+        "Implement Click adapter",
+        "Add click webhook controller",
+        "Sandbox E2E test",
+        "Update checkout UI with Click option"
+      ]
+    },
+    {
+      "title": "[M3] Refund flow on cancellation",
+      "milestone": "milestone/M3",
+      "type": "type/feature",
+      "area": "area/payment",
+      "priority": "priority/P0",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "Calculate refund from policy_snapshot, initiate provider refund, record refunds table, handle partial refunds for deposits.",
+      "acceptanceCriteria": [
+        "Full refund when cancelled within free window",
+        "Partial refund per cancellation_fee_percent",
+        "Refund status tracked and visible on booking detail",
+        "Failed refund queued for manual review"
+      ],
+      "checklist": [
+        "Implement refund.service",
+        "Link cancel booking to refund trigger",
+        "Add admin alert on refund failure",
+        "Test partial deposit refund scenarios"
+      ]
+    },
+    {
+      "title": "[M3] Checkout and payment status UI",
+      "milestone": "milestone/M3",
+      "type": "type/feature",
+      "area": "area/frontend",
+      "priority": "priority/P0",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "Screens C-40–C-43: checkout, processing polling, success/fail, BS-07 payment sheet, PaymentMethodCard, D-11 failed dialog, ER-22 polling state.",
+      "acceptanceCriteria": [
+        "Checkout shows deposit vs full amount clearly",
+        "Processing page polls until terminal state",
+        "Failed payment offers retry",
+        "Receipt shown on success"
+      ],
+      "checklist": [
+        "Implement checkout route",
+        "Add payment polling hook",
+        "Implement BS-07 and PaymentMethodCard",
+        "Add all payment error states"
+      ]
+    },
+    {
+      "title": "[M3] Payment worker and reconciliation job",
+      "milestone": "milestone/M3",
+      "type": "type/feature",
+      "area": "area/backend",
+      "priority": "priority/P1",
+      "storyPoints": 5,
+      "extraLabels": [],
+      "description": "Separate worker entrypoint, payment.processor for webhook retry and nightly reconciliation of pending payments.",
+      "acceptanceCriteria": [
+        "Worker deploys independently from API",
+        "Stuck pending_payment bookings resolved or expired",
+        "Dead letter queue for failed webhooks"
+      ],
+      "checklist": [
+        "Create apps/worker or worker.main.ts",
+        "Implement payment.processor",
+        "Add reconciliation cron",
+        "Dockerfile for worker"
+      ]
+    },
+    {
+      "title": "[M4] Epic: Beauty Salons + Consumer UX",
+      "milestone": "milestone/M4",
+      "type": "type/epic",
+      "area": "area/frontend",
+      "priority": "priority/P0",
+      "storyPoints": 21,
+      "extraLabels": [],
+      "description": "Launch salon vertical with multi-service booking, reviews, favorites, polished homepage/search, and uz/ru i18n.",
+      "acceptanceCriteria": [
+        "150+ salon listings target path started",
+        "Multi-service duration stacking works",
+        "Reviews post-completion functional",
+        "Homepage and search polished with i18n"
+      ],
+      "checklist": ["Close M4 child issues", "Release tagged v0.5.0"]
+    },
+    {
+      "title": "[M4] Salon schema and multi-service booking logic",
+      "milestone": "milestone/M4",
+      "type": "type/feature",
+      "area": "area/backend",
+      "priority": "priority/P0",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "Add salon_profiles, salon_chairs, service_pricing_rules. Support multiple booking_line_items with stacked duration on single allocation.",
+      "acceptanceCriteria": [
+        "Two services in one booking sum durations correctly",
+        "Stylist chair resource assigned",
+        "Pricing rules apply for weekend overrides"
+      ],
+      "checklist": [
+        "Add salon schema extensions",
+        "Extend booking service for multi-service",
+        "Unit test duration stacking",
+        "Salon onboarding API path"
+      ]
+    },
+    {
+      "title": "[M4] Reviews and favorites API",
+      "milestone": "milestone/M4",
+      "type": "type/feature",
+      "area": "area/backend",
+      "priority": "priority/P0",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "features/review: one review per completed booking, verified badge. user_favorites CRUD. Update business average_rating denormalization.",
+      "acceptanceCriteria": [
+        "Only completed bookings can be reviewed",
+        "One review per booking enforced",
+        "average_rating updates on review publish",
+        "Favorites idempotent toggle"
+      ],
+      "checklist": [
+        "Add reviews and favorites schema",
+        "Implement review and favorite modules",
+        "Add rating aggregation job or trigger",
+        "Moderation flag field for M10"
+      ]
+    },
+    {
+      "title": "[M4] Salon consumer booking UI and service selector",
+      "milestone": "milestone/M4",
+      "type": "type/feature",
+      "area": "area/frontend",
+      "priority": "priority/P0",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "Salon category pages, BS-04 service selector, stylist picker C-32, multi-service summary on C-38.",
+      "acceptanceCriteria": [
+        "User selects multiple services",
+        "Stylist selection optional if configured",
+        "Total duration and price shown before confirm"
+      ],
+      "checklist": [
+        "Add salon category routes",
+        "Implement service selector sheet",
+        "Wire multi-service to API",
+        "Salon business profile tab"
+      ]
+    },
+    {
+      "title": "[M4] Homepage, search polish, map view, and i18n",
+      "milestone": "milestone/M4",
+      "type": "type/feature",
+      "area": "area/frontend",
+      "priority": "priority/P0",
+      "storyPoints": 13,
+      "extraLabels": [],
+      "description": "Complete C-01 homepage, BS-01 BS-02 filters, C-04 map view, C-55 favorites, C-59 review UI, uz/ru locale routes and copy.",
+      "acceptanceCriteria": [
+        "Homepage featured and categories live",
+        "Filters apply without full page reload",
+        "Map shows business pins in Tashkent",
+        "User can switch uz/ru with persisted preference"
+      ],
+      "checklist": [
+        "Implement homepage sections",
+        "Add search filter bottom sheet",
+        "Integrate map provider",
+        "Add next-intl or equivalent",
+        "Translate core booking strings"
+      ]
+    },
+    {
+      "title": "[M5] Epic: Notifications + Telegram Bot",
+      "milestone": "milestone/M5",
+      "type": "type/epic",
+      "area": "area/telegram",
+      "priority": "priority/P0",
+      "storyPoints": 21,
+      "extraLabels": [],
+      "description": "SMS and Telegram notifications, reminder cron, modular Telegram bot with Scene Wizard, notification preferences UI, Mini App shell.",
+      "acceptanceCriteria": [
+        "90%+ notifications delivered within 60s",
+        "24h and 1h reminders sent",
+        "Bot completes football booking flow",
+        "500 bot bookings/month trajectory enabled"
+      ],
+      "checklist": ["Close M5 child issues", "Release tagged v0.6.0"]
+    },
+    {
+      "title": "[M5] Notification service and queue processor",
+      "milestone": "milestone/M5",
+      "type": "type/feature",
+      "area": "area/backend",
+      "priority": "priority/P0",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "features/notification: enqueue on booking events, templates uz/ru, notification.processor with SMS and Telegram adapters, retry logic.",
+      "acceptanceCriteria": [
+        "Booking confirm enqueues SMS and Telegram",
+        "Templates substitute variables correctly",
+        "Failed sends retry 5 times then dead letter",
+        "user_preferences respected"
+      ],
+      "checklist": [
+        "Add notifications schema",
+        "Implement notification module",
+        "Add SMS and Telegram adapters in worker",
+        "Unit test template rendering"
+      ]
+    },
+    {
+      "title": "[M5] Booking reminder scheduler",
+      "milestone": "milestone/M5",
+      "type": "type/feature",
+      "area": "area/backend",
+      "priority": "priority/P0",
+      "storyPoints": 5,
+      "extraLabels": [],
+      "description": "Cron every 15 min: find bookings needing 24h and 1h reminders, dedupe via notifications table, enqueue reminder jobs.",
+      "acceptanceCriteria": [
+        "Each booking receives at most one 24h and one 1h reminder",
+        "Reminders not sent for cancelled bookings",
+        "Cron runs in worker process"
+      ],
+      "checklist": [
+        "Implement booking-reminder.scheduler",
+        "Add reminder sent tracking",
+        "Integration test with frozen time",
+        "Monitor cron in logs"
+      ]
+    },
+    {
+      "title": "[M5] Telegram bot — commands, scenes, and webhook",
+      "milestone": "milestone/M5",
+      "type": "type/feature",
+      "area": "area/telegram",
+      "priority": "priority/P0",
+      "storyPoints": 13,
+      "extraLabels": [],
+      "description": "Modular Telegraf bot: /start, /bookings, /help commands, booking Scene Wizard, Redis session, rate limit middleware, webhook production mode.",
+      "acceptanceCriteria": [
+        "No command handler exceeds 30 lines",
+        "Session stored in Redis not memory",
+        "User can complete booking via bot",
+        "Webhook registered on production URL"
+      ],
+      "checklist": [
+        "Split telegram/ into commands, scenes, actions, keyboards",
+        "Implement booking.scene.ts",
+        "Add session and rate-limit middleware",
+        "Switch to webhook in production",
+        "Log all user actions"
+      ]
+    },
+    {
+      "title": "[M5] Notification settings and Mini App shell UI",
+      "milestone": "milestone/M5",
+      "type": "type/feature",
+      "area": "area/frontend",
+      "priority": "priority/P1",
+      "storyPoints": 5,
+      "extraLabels": [],
+      "description": "C-57 notification prefs, C-58 inbox, Telegram Mini App T-01–T-08 basic booking shell with initData auth.",
+      "acceptanceCriteria": [
+        "User toggles SMS/Telegram/push prefs",
+        "Mini App authenticates via Telegram initData",
+        "Mini App booking reuses consumer API"
+      ],
+      "checklist": [
+        "Implement notification settings page",
+        "Add notifications inbox",
+        "Create Mini App route with Telegram SDK",
+        "Validate initData server-side"
+      ]
+    },
+    {
+      "title": "[M6] Epic: Business Dashboard Complete",
+      "milestone": "milestone/M6",
+      "type": "type/epic",
+      "area": "area/frontend",
+      "priority": "priority/P0",
+      "storyPoints": 21,
+      "extraLabels": [],
+      "description": "Full business operations: today view, calendar, inbox, walk-in booking, staff, analytics, payout views.",
+      "acceptanceCriteria": [
+        "Business runs day without support tickets",
+        "Calendar shows all resources",
+        "Weekly payout view accurate",
+        "Staff roles enforced in UI"
+      ],
+      "checklist": ["Close M6 child issues", "Release tagged v0.7.0"]
+    },
+    {
+      "title": "[M6] Business calendar and walk-in booking API",
+      "milestone": "milestone/M6",
+      "type": "type/feature",
+      "area": "area/backend",
+      "priority": "priority/P0",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "Calendar day/week API with allocations, walk-in booking creation, accept/reject pending, block time slots.",
+      "acceptanceCriteria": [
+        "Day view returns bookings grouped by resource",
+        "Walk-in creates booking without consumer account optional",
+        "Block time creates resource_blocked_slots"
+      ],
+      "checklist": [
+        "Implement calendar endpoints",
+        "Add walk-in booking service method",
+        "Add accept/reject for approval mode",
+        "Test with multi-resource business"
+      ]
+    },
+    {
+      "title": "[M6] Staff management and analytics API",
+      "milestone": "milestone/M6",
+      "type": "type/feature",
+      "area": "area/backend",
+      "priority": "priority/P1",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "Invite staff to business_members, role assignment, analytics endpoints: bookings count, revenue, peak hours, cancellation rate.",
+      "acceptanceCriteria": [
+        "Owner can invite manager/receptionist",
+        "Receptionist cannot access payout settings",
+        "Analytics returns 30-day summary"
+      ],
+      "checklist": [
+        "Implement staff invite flow",
+        "Add role-based route guards",
+        "Implement analytics queries",
+        "Add HeatmapChart data endpoint"
+      ]
+    },
+    {
+      "title": "[M6] Payout aggregation job and view API",
+      "milestone": "milestone/M6",
+      "type": "type/feature",
+      "area": "area/payment",
+      "priority": "priority/P1",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "Weekly business_payouts generation from completed bookings, commission deduction, payout_items breakdown, view-only API until bank transfer.",
+      "acceptanceCriteria": [
+        "Payout job runs weekly without duplicates",
+        "Commission matches category rate",
+        "Business can view payout history"
+      ],
+      "checklist": [
+        "Add payout schema if not in M3",
+        "Implement payout.scheduler",
+        "Add GET payouts endpoints",
+        "Verify totals against payment ledger"
+      ]
+    },
+    {
+      "title": "[M6] Business dashboard UI — calendar, inbox, analytics",
+      "milestone": "milestone/M6",
+      "type": "type/feature",
+      "area": "area/frontend",
+      "priority": "priority/P0",
+      "storyPoints": 13,
+      "extraLabels": [],
+      "description": "B-20–B-25, B-50–B-52: today overview, bookings inbox, calendar day/week, DR-01 drawer, BS-12 quick book, analytics charts, payout list.",
+      "acceptanceCriteria": [
+        "Calendar renders on mobile and desktop",
+        "Click booking opens detail drawer",
+        "Analytics charts load with skeleton L-15",
+        "Empty states E-06 E-10 E-11 implemented"
+      ],
+      "checklist": [
+        "Implement dashboard layout with Sidebar",
+        "Build CalendarDayView and WeekView",
+        "Add booking detail drawer",
+        "Implement analytics and payout pages"
+      ]
+    },
+    {
+      "title": "[M7] Epic: Restaurants",
+      "milestone": "milestone/M7",
+      "type": "type/epic",
+      "area": "area/backend",
+      "priority": "priority/P1",
+      "storyPoints": 13,
+      "extraLabels": [],
+      "description": "Restaurant table booking with party size, auto table assignment, large party deposits, approval mode.",
+      "acceptanceCriteria": [
+        "100+ restaurants onboarded",
+        "Party size matched to table capacity",
+        "6+ guests trigger deposit from policy"
+      ],
+      "checklist": ["Close M7 child issues", "Release tagged v0.8.0"]
+    },
+    {
+      "title": "[M7] Restaurant schema and table assignment engine",
+      "milestone": "milestone/M7",
+      "type": "type/feature",
+      "area": "area/backend",
+      "priority": "priority/P1",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "restaurant_profiles, restaurant_tables with min/max guests, zones. Algorithm assigns smallest fitting table for party_size.",
+      "acceptanceCriteria": [
+        "No table assigned below min or above max guests",
+        "Zone preference honored when specified",
+        "No double-assign same table same slot"
+      ],
+      "checklist": [
+        "Add restaurant schema",
+        "Implement table assignment in booking service",
+        "Unit test assignment edge cases",
+        "Restaurant onboarding wizard path"
+      ]
+    },
+    {
+      "title": "[M7] Restaurant consumer and business UI",
+      "milestone": "milestone/M7",
+      "type": "type/feature",
+      "area": "area/frontend",
+      "priority": "priority/P1",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "Restaurant category, C-35 party size, BS-17 deposit explainer, table resource management, zone config on business side.",
+      "acceptanceCriteria": [
+        "User selects guest count before slots",
+        "Deposit banner shown for large parties",
+        "Business can configure tables and zones"
+      ],
+      "checklist": [
+        "Add restaurant consumer routes",
+        "Implement party size stepper",
+        "Add restaurant business forms",
+        "Test deposit flow with M3 payments"
+      ]
+    },
+    {
+      "title": "[M8] Epic: Clinics + Coworking",
+      "milestone": "milestone/M8",
+      "type": "type/epic",
+      "area": "area/backend",
+      "priority": "priority/P1",
+      "storyPoints": 21,
+      "extraLabels": [],
+      "description": "Clinic doctor booking with intake forms, coworking desk/meeting room hourly booking, approval mode, buffer time.",
+      "acceptanceCriteria": [
+        "50 clinics and 30 coworking spaces onboarded",
+        "Intake responses stored on booking",
+        "Buffer time between clinic appointments enforced"
+      ],
+      "checklist": ["Close M8 child issues", "Release tagged v0.9.0"]
+    },
+    {
+      "title": "[M8] Clinic schema, intake forms, and booking flow",
+      "milestone": "milestone/M8",
+      "type": "type/feature",
+      "area": "area/backend",
+      "priority": "priority/P1",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "clinic_profiles, clinic_doctors, clinic_intake_form_fields, booking_intake_responses. Doctor as resource. Medical disclaimer in booking.",
+      "acceptanceCriteria": [
+        "Dynamic intake fields render from business config",
+        "Required fields validated before confirm",
+        "No PHI stored beyond intake responses"
+      ],
+      "checklist": [
+        "Add clinic schema",
+        "Implement intake form CRUD for business",
+        "Store responses on booking create",
+        "Legal disclaimer in API response"
+      ]
+    },
+    {
+      "title": "[M8] Coworking schema and hourly/daily booking",
+      "milestone": "milestone/M8",
+      "type": "type/feature",
+      "area": "area/backend",
+      "priority": "priority/P1",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "coworking_profiles, coworking_spaces, hot desk vs meeting room resources, hourly and daily pricing models.",
+      "acceptanceCriteria": [
+        "Hourly slots generated for meeting rooms",
+        "Daily booking for hot desks",
+        "Projector/whiteboard in resource metadata"
+      ],
+      "checklist": [
+        "Add coworking schema",
+        "Extend availability for hourly granularity",
+        "Coworking onboarding path",
+        "Test daily vs hourly pricing"
+      ]
+    },
+    {
+      "title": "[M8] Clinic and coworking consumer + business UI",
+      "milestone": "milestone/M8",
+      "type": "type/feature",
+      "area": "area/frontend",
+      "priority": "priority/P1",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "C-37 clinic intake BS-16, doctor cards, coworking space tabs, intake form editor for clinic admin.",
+      "acceptanceCriteria": [
+        "Clinic booking shows doctor profiles",
+        "Intake form renders all field types",
+        "Coworking toggles hourly/daily"
+      ],
+      "checklist": [
+        "Implement clinic booking UI",
+        "Implement coworking booking UI",
+        "Business intake form builder",
+        "Category landing pages"
+      ]
+    },
+    {
+      "title": "[M9] Epic: Hotels",
+      "milestone": "milestone/M9",
+      "type": "type/epic",
+      "area": "area/backend",
+      "priority": "priority/P1",
+      "storyPoints": 21,
+      "extraLabels": [],
+      "description": "Multi-night hotel stays, room types, inventory pool, rate plans, English locale for guests.",
+      "acceptanceCriteria": [
+        "40+ hotel properties",
+        "No overbooking across date ranges",
+        "English UI available for hotel routes"
+      ],
+      "checklist": ["Close M9 child issues", "Release tagged v1.0.0"]
+    },
+    {
+      "title": "[M9] Hotel schema and multi-night availability engine",
+      "milestone": "milestone/M9",
+      "type": "type/feature",
+      "area": "area/backend",
+      "priority": "priority/P1",
+      "storyPoints": 13,
+      "extraLabels": [],
+      "description": "hotel_profiles, hotel_room_types, hotel_rooms, hotel_rate_plans. Availability by night inventory count, min nights, check-in/out times.",
+      "acceptanceCriteria": [
+        "Date range query returns available room types",
+        "Inventory decrements for all nights in stay",
+        "Rate plan seasonal pricing applied"
+      ],
+      "checklist": [
+        "Add hotel schema",
+        "Implement night-based availability engine",
+        "Load test overlapping range bookings",
+        "Rate plan selection logic"
+      ]
+    },
+    {
+      "title": "[M9] Hotel consumer UI with English locale",
+      "milestone": "milestone/M9",
+      "type": "type/feature",
+      "area": "area/frontend",
+      "priority": "priority/P1",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "C-36 date range, BS-14 room types, BS-15 guests, cancellation tiers, hotel business management, en locale for hotel pages.",
+      "acceptanceCriteria": [
+        "User selects check-in/out and sees total nights price",
+        "Room type cards show max guests and breakfast",
+        "English strings complete for hotel flow"
+      ],
+      "checklist": [
+        "Implement hotel booking flow",
+        "Add room type selection sheet",
+        "Hotel business room type CRUD",
+        "Add en translations for hotel"
+      ]
+    },
+    {
+      "title": "[M10] Epic: Admin + Trust Operations",
+      "milestone": "milestone/M10",
+      "type": "type/epic",
+      "area": "area/backend",
+      "priority": "priority/P1",
+      "storyPoints": 21,
+      "extraLabels": [],
+      "description": "Admin panel for verification, disputes, featured listings, commission config, audit logs, review moderation.",
+      "acceptanceCriteria": [
+        "Verification SLA under 48 hours",
+        "100% admin actions audited",
+        "Dispute workflow end-to-end tested"
+      ],
+      "checklist": ["Close M10 child issues", "Release tagged v1.1.0"]
+    },
+    {
+      "title": "[M10] Admin API — verification, disputes, audit",
+      "milestone": "milestone/M10",
+      "type": "type/feature",
+      "area": "area/backend",
+      "priority": "priority/P1",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "features/admin with admin role guard, verification queue, approve/reject, dispute resolution, refund override, audit_logs on every mutation.",
+      "acceptanceCriteria": [
+        "Non-admin receives 403 on admin routes",
+        "Reject requires reason stored",
+        "Audit log captures old/new values"
+      ],
+      "checklist": [
+        "Add disputes and audit_logs schema",
+        "Implement admin module",
+        "IP allowlist middleware optional",
+        "E2E dispute test"
+      ]
+    },
+    {
+      "title": "[M10] Featured listings and commission config API",
+      "milestone": "milestone/M10",
+      "type": "type/feature",
+      "area": "area/backend",
+      "priority": "priority/P2",
+      "storyPoints": 5,
+      "extraLabels": [],
+      "description": "CRUD featured_listings, commission_rates by category, platform_settings key-value store.",
+      "acceptanceCriteria": [
+        "Featured businesses appear in consumer featured API",
+        "Commission rate changes apply to new bookings only"
+      ],
+      "checklist": [
+        "Add featured and commission schema",
+        "Implement admin CRUD endpoints",
+        "Wire featured to search API from M4"
+      ]
+    },
+    {
+      "title": "[M10] Admin panel UI",
+      "milestone": "milestone/M10",
+      "type": "type/feature",
+      "area": "area/frontend",
+      "priority": "priority/P1",
+      "storyPoints": 13,
+      "extraLabels": [],
+      "description": "apps/admin: A-02 overview, A-05 verification, A-08 bookings, A-10 disputes, A-12 featured, A-15 audit logs. Dialogs D-07 D-08 D-09.",
+      "acceptanceCriteria": [
+        "Verifier can approve business from queue",
+        "Admin can process dispute with refund override",
+        "Audit log searchable by entity"
+      ],
+      "checklist": [
+        "Scaffold admin app or route group",
+        "Implement verification queue UI",
+        "Implement dispute detail UI",
+        "Add DocumentPreview component"
+      ]
+    },
+    {
+      "title": "[M11] Epic: Scale + Multi-City",
+      "milestone": "milestone/M11",
+      "type": "type/epic",
+      "area": "area/infra",
+      "priority": "priority/P2",
+      "storyPoints": 34,
+      "extraLabels": [],
+      "description": "Samarkand/Bukhara launch, read replicas, search index, cache hardening, load testing, monitoring, runbooks.",
+      "acceptanceCriteria": [
+        "p95 availability API under 500ms at 10x load",
+        "Samarkand live with 50+ businesses",
+        "99.9% uptime over 30 days"
+      ],
+      "checklist": ["Close M11 child issues", "Release tagged v1.2.0"]
+    },
+    {
+      "title": "[M11] Read replica, PgBouncer, and connection pooling",
+      "milestone": "milestone/M11",
+      "type": "type/infra",
+      "area": "area/devops",
+      "priority": "priority/P1",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "Configure PostgreSQL read replica for search/analytics queries, PgBouncer in transaction mode, tune Prisma connection limits.",
+      "acceptanceCriteria": [
+        "Search queries route to replica",
+        "Writes always go to primary",
+        "Connection pool sized for 2+ API replicas"
+      ],
+      "checklist": [
+        "Provision replica on Neon/RDS",
+        "Configure PgBouncer",
+        "Split read/write in repository layer for search",
+        "Load test connection count"
+      ]
+    },
+    {
+      "title": "[M11] Search index and availability cache hardening",
+      "milestone": "milestone/M11",
+      "type": "type/feature",
+      "area": "area/backend",
+      "priority": "priority/P1",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "Materialized view business_search_index with refresh job, GIN full-text index, availability cache invalidation audit, rate limiting at edge.",
+      "acceptanceCriteria": [
+        "Search p95 under 2s on 5000 businesses dataset",
+        "Cache invalidation within 1s of booking write",
+        "Cloudflare rate limit on public API"
+      ],
+      "checklist": [
+        "Create materialized view migration",
+        "Implement search-index.processor refresh",
+        "Add cache invalidation hooks on all write paths",
+        "Configure Cloudflare rules"
+      ]
+    },
+    {
+      "title": "[M11] Multi-city launch and performance testing",
+      "milestone": "milestone/M11",
+      "type": "type/feature",
+      "area": "area/frontend",
+      "priority": "priority/P2",
+      "storyPoints": 8,
+      "extraLabels": [],
+      "description": "Seed Samarkand and Bukhara geo, city selector on homepage, k6 load tests, ISR for business profiles, Grafana dashboards, ops runbooks.",
+      "acceptanceCriteria": [
+        "City selector filters search results",
+        "k6 report shows p95 within budget",
+        "Grafana dashboards for GMV and errors",
+        "Runbooks for deploy, rollback, restore"
+      ],
+      "checklist": [
+        "Seed new cities",
+        "Implement city selector UI",
+        "Run k6 availability and search tests",
+        "Create docs/runbooks/",
+        "Set up Grafana dashboards"
+      ]
+    }
+  ]
+}

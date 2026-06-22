@@ -1,0 +1,24 @@
+{
+  "name": "@rezerva/eslint-config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./nestjs": "./nestjs.mjs",
+    "./next": "./next.mjs",
+    "./library": "./library.mjs"
+  },
+  "dependencies": {
+    "@eslint/eslintrc": "^3.2.0",
+    "@eslint/js": "^9.18.0",
+    "eslint-config-next": "^15.5.19",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-prettier": "^5.2.2",
+    "globals": "^15.14.0",
+    "typescript-eslint": "^8.20.0"
+  },
+  "peerDependencies": {
+    "eslint": "^9",
+    "prettier": "^3"
+  }
+}

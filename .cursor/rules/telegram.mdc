@@ -1,0 +1,23 @@
+---
+description: Telegraf bot — Scene Wizard, Redis state, modular commands, validation, logging
+globs: backend/src/telegram/**,backend/src/auth/**,frontend/src/components/auth/**,frontend/src/features/auth/**
+alwaysApply: false
+---
+
+# Telegram Bot
+
+Use Telegraf.
+
+Use Scene Wizard.
+
+Use Middleware.
+
+Keep user state inside Redis.
+
+Never create large command handlers.
+
+Split every command into modules.
+
+Every action must have validation.
+
+Always log user actions.

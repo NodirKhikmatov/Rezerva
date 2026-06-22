@@ -1,0 +1,31 @@
+---
+description: UI design system — Apple-inspired, Inter font, 8px grid, primary #2563EB
+globs: frontend/src/components/**,frontend/src/features/**/components/**,frontend/src/app/**
+alwaysApply: false
+---
+
+# UI
+
+Modern.
+
+Minimal.
+
+Apple Inspired.
+
+Use 8px spacing.
+
+Rounded XL.
+
+Smooth animation.
+
+No clutter.
+
+Readable typography.
+
+Inter Font.
+
+Primary: `#2563EB`
+
+Neutral Gray.
+
+Dark Mode Ready.

@@ -1,0 +1,49 @@
+---
+description: Next.js App Router, Server Components, shadcn/ui, Tailwind conventions
+globs: frontend/**/*
+alwaysApply: false
+---
+
+# Frontend
+
+Use Next.js App Router.
+
+Use Server Components whenever possible.
+
+Use Client Components only when necessary.
+
+Use Suspense.
+
+Use Lazy Loading.
+
+Use Dynamic Imports.
+
+Use shadcn/ui.
+
+Responsive First.
+
+Mobile First.
+
+Accessibility Required.
+
+SEO Optimized.
+
+Reusable Components.
+
+Use TailwindCSS.
+
+Use React Hook Form.
+
+Use Zod.
+
+Never use inline styles.
+
+Never hardcode colors.
+
+Never hardcode spacing.
+
+Place feature code under `src/features/<feature>/` with colocated components, hooks, types, services, api, utils, and validation.
+
+Keep pages thin — compose from feature components and server data loaders.
+
+Use `@/` import alias consistently.

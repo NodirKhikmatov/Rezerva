@@ -1,0 +1,35 @@
+---
+description: PostgreSQL and Prisma schema conventions — UUID, indexes, soft delete
+globs: backend/prisma/**,**/*.prisma,backend/src/**/repositories/**
+alwaysApply: false
+---
+
+# Database
+
+Use PostgreSQL.
+
+Use Prisma.
+
+Use UUID for primary keys (`@default(uuid())` or `@db.Uuid`).
+
+Always create indexes on foreign keys and frequently queried columns.
+
+Never duplicate data.
+
+Use Foreign Keys.
+
+Soft Delete — include `deletedAt` on entities that can be removed.
+
+Every model must include:
+
+- `createdAt`
+- `updatedAt`
+- `deletedAt` (where soft delete applies)
+
+Always normalize data.
+
+Use transactions for multi-table writes.
+
+Name tables with `@@map("snake_case")` and columns explicitly when needed.
+
+Run migrations for every schema change — never edit production schema manually.

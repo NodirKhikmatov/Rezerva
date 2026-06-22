@@ -1,0 +1,191 @@
+---
+description: Feature-first architecture, monorepo layout, API conventions, and migration path
+alwaysApply: true
+---
+
+# Architecture
+
+## Product context
+
+**Rezerva** is a multi-vertical booking platform (football, beauty, restaurants, clinics, hotels). The roadmap lives in `.github/issues/issues.json` (M0–M11).
+
+The repository currently contains a **legacy ordering MVP** (`Product`, `Order`, `OrderItem`) used as a deployable shell. M0 explicitly replaces this schema with booking-platform core tables. Do not extend the ordering domain for new features — migrate toward the target model.
+
+## Principles
+
+- Feature First Architecture — organize by domain, not by technical layer at the root.
+- Clean Architecture — dependencies flow inward: **UI → services → repositories → database**.
+- Never place business logic inside UI or controllers.
+- Shared cross-cutting code belongs in `packages/` — not duplicated across features or apps.
+- Every schema change requires a committed Prisma migration.
+
+## Monorepo layout
+
+```
+ordering/                          # repo root (rename to rezerva when product branding stabilizes)
+├── frontend/                      # Next.js consumer app (App Router)
+├── backend/                       # NestJS API + workers
+├── packages/
+│   ├── tsconfig/                  # shared TypeScript bases
+│   ├── eslint-config/             # shared lint rules
+│   ├── shared-constants/          # enums: BusinessCategory, BookingStatus, Locale
+│   └── shared-validation/         # Zod schemas shared by frontend and backend
+├── .github/issues/                # roadmap (source of truth for milestones)
+└── docker-compose.yml
+```
+
+### Target backend structure
+
+```
+backend/src/
+├── features/
+│   auth/           # OTP, Telegram, sessions, JWT refresh
+│   user/           # profile, preferences, addresses
+│   business/       # onboarding, catalog, locations, members
+│   booking/        # availability, holds, confirmations, allocations
+│   payment/        # Payme, Click, ledger, payouts
+│   notification/   # templates, queue, SMS/Telegram adapters
+│   admin/          # verification, moderation (later milestone)
+│   geo/            # countries, regions, districts
+│   telegram/       # bot commands, scenes, webhook (thin — delegates to feature services)
+├── shared/
+│   database/       # PrismaModule, PrismaService
+│   queue/          # BullMQ registration, base processor
+│   storage/        # Supabase signed URLs
+│   config/         # env validation (fail-fast in production)
+│   guards/         # JwtAuthGuard, BusinessMemberGuard, RolesGuard
+│   filters/        # consistent HTTP error shape
+│   interceptors/
+│   health/
+│   instrument.ts
+├── app.module.ts
+└── main.ts
+```
+
+Each feature contains: `module`, `controller`, `service`, `repository`, `dto`, `types`, and optionally `utils` / `validation`.
+
+### Target frontend structure
+
+```
+frontend/src/
+├── app/
+│   (consumer)/     # C-* screens: discover, book, my bookings
+│   (auth)/         # login, OTP verify
+│   (business)/     # B-* screens: onboarding, dashboard (later)
+│   (mini-app)/     # T-* Telegram Mini App routes (later)
+├── features/
+│   auth/
+│   booking/
+│   business/
+│   notification/
+│   payment/
+│   user/
+└── shared/
+    components/     # AppShell, Header, Footer, design-system primitives
+    hooks/
+    lib/            # api client, logger
+    types/
+    validation/
+```
+
+Each feature contains: `components`, `hooks`, `types`, `services`, `api`, `utils`, `validation`.
+
+### Legacy modules (remove during M0)
+
+These flat modules predate feature-first layout and must be migrated, not extended:
+
+- `backend/src/auth/` → `features/auth/`
+- `backend/src/orders/` → delete after schema migration (ordering domain retired)
+- `frontend/src/components/` + `frontend/src/lib/api.ts` → split into `features/` + `shared/`
+
+## API conventions
+
+- Prefix all routes with **`/v1`** (global prefix in `main.ts`).
+- REST resources are plural nouns: `/v1/businesses`, `/v1/bookings`.
+- Auth endpoints: `/v1/auth/otp/send`, `/v1/auth/otp/verify`, `/v1/auth/telegram`, `/v1/auth/refresh`.
+- Controllers: HTTP only — parse input, call service, return response.
+- Repositories: sole owners of Prisma/database access.
+- Services: business rules, orchestration, transactions.
+- Return consistent error shapes via global exception filter.
+- OpenAPI spec generated from NestJS decorators (add in M0).
+
+## Multi-tenancy and authorization
+
+- **Consumer context**: authenticated user (`sub` claim).
+- **Business context**: user must be a `business_member` with role (`owner`, `manager`, `receptionist`).
+- Every business-scoped query filters by `business_id` — never trust client-supplied tenant IDs without membership check.
+- JWT claims: `sub`, `role`, `locale`, `jti` (session id for revocation).
+- Refresh token rotation stored in `user_sessions`; invalidate on reuse.
+
+## Data and concurrency (booking engine)
+
+- Primary keys: **UUID** (`@db.Uuid`), not CUID.
+- Soft delete: `deletedAt` on user-facing entities.
+- Booking slot allocation uses PostgreSQL **exclusion constraints** or row-level locking to prevent double-booking.
+- Slot holds expire (default 10 min) via scheduled job; released holds free the slot.
+- Multi-table writes use Prisma `$transaction`.
+- Policy snapshot stored as JSON on booking create (immutable audit).
+
+## Async and events
+
+- **BullMQ + Redis** for: notifications, booking reminders, payout aggregation, media processing.
+- Producers enqueue from services after successful DB commit — not from controllers directly.
+- Processors are idempotent; failed jobs retry with backoff, then dead-letter.
+- Cron schedulers run in a dedicated worker process (not the HTTP server) at scale.
+
+## Frontend apps and surfaces
+
+| Surface | Route group | Auth |
+|---------|-------------|------|
+| Consumer web | `(consumer)` | Phone OTP or Telegram → JWT |
+| Business dashboard | `(business)` | Same auth + business membership |
+| Telegram Mini App | `(mini-app)` | Telegram `initData` validated server-side |
+| Telegram bot | webhook → `features/telegram` | Session in Redis |
+
+Session storage: prefer **httpOnly cookies** for web; avoid localStorage for tokens in production.
+
+## Observability and ops
+
+- `/health` returns dependency status: `{ db: ok|fail, redis: ok|fail }` with HTTP 503 when degraded.
+- Sentry on frontend and backend.
+- Env validation on boot — refuse start in production if required vars missing.
+- CI: lint, typecheck, test, build, `prisma migrate deploy` against test DB.
+- Deploy: Vercel (frontend), Railway (backend); run migrations before app start.
+
+## Scalability path
+
+| Phase | Trigger | Action |
+|-------|---------|--------|
+| M0–M2 | < 1k DAU | Single API + worker on Railway, managed Postgres/Redis |
+| M3–M5 | Payments + notifications | Separate worker dyno; Redis-backed rate limits |
+| M6+ | Multi-city, analytics | Read replicas for analytics; CDN for media |
+| M10+ | Multi-region | Geo tables + city-scoped indexes; consider regional API |
+
+Avoid premature microservices — keep modular monolith with clear feature boundaries until team or traffic demands split.
+
+## Migration checklist (M0 gate)
+
+Before closing M0 epic, verify:
+
+1. `features/` layout on backend and frontend.
+2. Core schema replaces ordering tables; migrations committed.
+3. `/v1` API prefix; legacy `/orders` routes removed or aliased with deprecation header.
+4. `packages/shared-*` consumed by both apps.
+5. Health checks cover Postgres and Redis.
+6. Design tokens match UI rules (`#2563EB` primary, Geist typography).
+7. No controller accesses Prisma directly.
+8. Rate limiting on auth endpoints.
+
+## Documentation map
+
+| Topic | Location |
+|-------|----------|
+| Roadmap & acceptance criteria | `.github/issues/issues.json` |
+| Database conventions | `.cursor/rules/database.mdc` |
+| Backend patterns | `.cursor/rules/backend.mdc` |
+| Frontend patterns | `.cursor/rules/frontend.mdc` |
+| UI design system | `.cursor/rules/ui.mdc` |
+| Telegram bot | `.cursor/rules/telegram.mdc` |
+| Security | `.cursor/rules/security.mdc` |
+
+There is no standalone PRD file — treat M0 epic acceptance criteria plus M1+ epics as product requirements until a formal PRD is authored under `docs/`.

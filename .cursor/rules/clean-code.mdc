@@ -1,0 +1,24 @@
+---
+description: Clean code — short functions, early return, meaningful names, single responsibility
+alwaysApply: true
+---
+
+# Clean Code
+
+Functions must be under 30 lines.
+
+Avoid nested conditions.
+
+Prefer early return.
+
+Use meaningful names.
+
+No abbreviations.
+
+No magic numbers.
+
+Every file has one responsibility.
+
+Write comments only when needed.
+
+Prefer self-documenting code.
