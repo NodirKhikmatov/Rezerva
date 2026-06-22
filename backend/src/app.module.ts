@@ -6,6 +6,7 @@ import configuration from './config/configuration';
 import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { StorageModule } from './storage/storage.module';
+import { TelegramModule } from './features/telegram/telegram.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { StorageModule } from './storage/storage.module';
     UserModule,
     StorageModule,
     HealthModule,
+    ...(process.env.ENABLE_TELEGRAM_BOT === 'true' ? [TelegramModule] : []),
   ],
 })
 export class AppModule {}
